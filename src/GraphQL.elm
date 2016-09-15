@@ -55,6 +55,15 @@ fetch verb url query operation variables decoder =
         Http.fromJson (queryResult decoder) (Http.send Http.defaultSettings request)
 
 
+settings : Http.Settings
+settings =
+    let
+        defaultSettings =
+            Http.defaultSettings
+    in
+        { defaultSettings | withCredentials = True }
+
+
 {-| Todo: document this function.
 -}
 queryResult : Decoder a -> Decoder a
