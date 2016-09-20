@@ -52,7 +52,7 @@ fetch verb url query operation variables decoder =
             , body = Http.empty
             }
     in
-        Http.fromJson (queryResult decoder) (Http.send Http.defaultSettings request)
+        Http.fromJson (queryResult decoder) (Http.send settings request)
 
 
 settings : Http.Settings
