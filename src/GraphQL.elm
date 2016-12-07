@@ -37,31 +37,24 @@ mutation url query operation variables decoder =
 fetch : String -> String -> String -> String -> String -> Decoder a -> Task Http.Error a
 fetch verb url query operation variables decoder =
     let
-        request =
-            { verb = verb
-            , headers =
-                [ ( "Accept", "application/json" )
-                ]
-            , url =
-                (Http.url url
-                    [ ( "query", query )
-                    , ( "operationName", operation )
-                    , ( "variables", variables )
-                    ]
-                )
-            , body = Http.empty
+        queryParams =
+            [ ( "query", query )
+            , ( "operationName", operation )
+            , ( "variables", variables )
+            ]
+                |> List.map (\( k, v ) -> k ++ "=" ++ v)
+                |> String.join ("&")
+    in
+        Http.request
+            { method = verb
+            , headers = [ Http.header "Accept" "application/json" ]
+            , url = url ++ "?" ++ queryParams
+            , body = Http.emptyBody
+            , expect = Http.expectJson (queryResult decoder)
+            , timeout = Nothing
+            , withCredentials = True
             }
-    in
-        Http.fromJson (queryResult decoder) (Http.send settings request)
-
-
-settings : Http.Settings
-settings =
-    let
-        defaultSettings =
-            Http.defaultSettings
-    in
-        { defaultSettings | withCredentials = True }
+            |> Http.toTask
 
 
 {-| Todo: document this function.
@@ -77,10 +70,11 @@ queryResult decoder =
 
 
 {-| Todo: document this function.
+https://github.com/elm-community/json-extra/blob/2.0.0/src/Json/Decode/Extra.elm#L51
 -}
 apply : Decoder (a -> b) -> Decoder a -> Decoder b
-apply func value =
-    object2 (<|) func value
+apply =
+    flip (map2 (|>))
 
 
 {-| Todo: document this function.
